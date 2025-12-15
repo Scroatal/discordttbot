@@ -1,0 +1,37 @@
+Role: You are an expert Python developer specializing in discord.py.
+
+Task: Build a Discord bot that fixes TikTok video embeds by detecting TikTok links in chat and replying with a "fixer" link that allows the video to play natively in Discord.
+
+Architecture & Constraints:
+
+Method: Do NOT attempt to download the video file using yt-dlp or similar libraries. Use the Link Replacement Method only.
+
+Library: Use discord.py.
+
+Fixer Domain: Replace standard tiktok.com domains with tnktok.com (this is currently the most reliable embed wrapper).
+
+Core Logic Requirements:
+
+Detection: The bot must listen to on_message. It should use Regex to detect any URL containing tiktok.com, vm.tiktok.com, or vt.tiktok.com.
+
+Replacement: When a match is found:
+
+Extract the full URL.
+
+Replace the hostname with tnktok.com.
+
+Reply to the user's message with the new link.
+
+Cleanup: If the bot has the Manage Messages permission, it should suppress the embed of the user's original message (using message.edit(suppress=True)) so the chat isn't cluttered with two links.
+
+Self-Ignore: Ensure the bot ignores its own messages to prevent infinite loops.
+
+Deliverables:
+
+main.py: The actual bot code.
+
+.env: A template for the environment variables (specifically DISCORD_BOT_TOKEN).
+
+requirements.txt: The dependencies.
+
+Instructions: A brief comment explaining that "Message Content Intent" must be enabled in the Discord Developer Portal for this to work.
