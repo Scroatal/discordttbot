@@ -1,0 +1,14 @@
+[Unit]
+Description=Discord TikTok Bot
+After=network.target
+
+[Service]
+# Service runs as root by default. config if needed.
+User=root
+WorkingDirectory=/root/discordttbot
+ExecStart=/root/discordttbot/venv/bin/python main.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
