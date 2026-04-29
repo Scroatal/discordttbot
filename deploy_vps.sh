@@ -35,10 +35,10 @@ pip install -r requirements.txt
 # .env Setup
 if [ ! -f ".env" ]; then
     echo "WARNING: .env file not found!"
-    echo "Please create the .env file with your DISCORD_TOKEN."
+    echo "Please create the .env file with your DISCORD_BOT_TOKEN."
     read -p "Enter your Discord Bot Token now (or press Enter to skip): " TOKEN
     if [ ! -z "$TOKEN" ]; then
-        echo "DISCORD_TOKEN=$TOKEN" > .env
+        echo "DISCORD_BOT_TOKEN=$TOKEN" > .env
         echo ".env created."
     else
         echo "Skipping .env creation. Remember to create it manually before starting the service!"

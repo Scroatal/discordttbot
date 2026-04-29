@@ -16,7 +16,7 @@ for url in test_cases:
     match = re.search(TIKTOK_REGEX, url)
     if match:
         original = match.group(0)
-        fixed = original.replace("tiktok.com", "tnktok.com")
+        fixed = original.replace("tiktok.com", "kktiktok.com")
         print(f"[PASS] Matched: {original} -> Fixed: {fixed}")
     else:
         print(f"[FAIL] Did not match: {url}")

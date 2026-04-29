@@ -11,6 +11,7 @@ TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 # Matches: https://tiktok.com, https://www.tiktok.com, https://vm.tiktok.com, https://vt.tiktok.com
 # Also handles query parameters and trailing slashes
 TIKTOK_REGEX = r'(https?://(?:www\.|vm\.|vt\.)?tiktok\.com/[^\s]+)'
+FIXER_DOMAIN = "kktiktok.com"
 
 class TikTokFixerClient(discord.Client):
     async def on_ready(self):
@@ -29,14 +30,9 @@ class TikTokFixerClient(discord.Client):
             original_url = match.group(0)
             print(f"Detected TikTok link: {original_url}")
 
-            # Replace the hostname with tnktok.com
-            # tnktok.com is a reliable embed fixer
-            # We replace 'tiktok.com' with 'tnktok.com'
-            # Note: vm.tiktok.com or vt.tiktok.com also need to be handled carefully.
-            # tnktok usually works by just replacing the domain. 
-            # Let's do a robust replacement.
-            
-            new_url = original_url.replace("tiktok.com", "tnktok.com")
+            # Replace only the TikTok domain token so short links keep their subdomain.
+            # Example: vm.tiktok.com/... -> vm.kktiktok.com/...
+            new_url = original_url.replace("tiktok.com", FIXER_DOMAIN)
             
             try:
                 # Reply to the user with the fixed link
