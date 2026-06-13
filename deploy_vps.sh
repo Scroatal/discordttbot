@@ -9,16 +9,25 @@ SERVICE_NAME="discordbot"
 
 echo "Updating system..."
 sudo apt-get update
-sudo apt-get install -y python3 python3-pip python3-venv git
+sudo apt-get install -y python3 python3-pip python3-venv git ffmpeg
 
 # Check if directory exists
 if [ -d "$INSTALL_DIR" ]; then
-    echo "Directory exists. Pulling latest changes..."
+    echo "Directory exists. Checking for git..."
     cd "$INSTALL_DIR"
-    git pull
+    if [ -d ".git" ]; then
+        echo "Pulling latest changes..."
+        git pull || echo "Git pull failed (private repo?), attempting manual file check..."
+    else
+        echo "Not a git repository. Using existing files..."
+    fi
 else
     echo "Cloning repository..."
-    git clone "$REPO_URL" "$INSTALL_DIR"
+    # Copying manually, so this might not be reached if we scp first
+    git clone "$REPO_URL" "$INSTALL_DIR" || echo "Git clone failed. Please ensure files are copied manually."
+    
+    # Create dir if git failed so we can use it
+    mkdir -p "$INSTALL_DIR"
     cd "$INSTALL_DIR"
 fi
 

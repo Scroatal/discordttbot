@@ -1,37 +1,20 @@
-Role: You are an expert Python developer specializing in discord.py.
+Discord TikTok/X Link Converter and Music Bot
 
-Task: Build a Discord bot that fixes TikTok video embeds by detecting TikTok links in chat and replying with a "fixer" link that allows the video to play natively in Discord.
+Setup:
 
-Architecture & Constraints:
+1. Create a .env file in this folder:
 
-Method: Do NOT attempt to download the video file using yt-dlp or similar libraries. Use the Link Replacement Method only.
+DISCORD_BOT_TOKEN=your_new_discord_bot_token
 
-Library: Use discord.py.
+2. Enable Message Content Intent in the Discord Developer Portal for the bot.
 
-Fixer Domain: Replace standard tiktok.com domains with tnktok.com (this is currently the most reliable embed wrapper).
+3. Install ffmpeg and make sure it is available in PATH.
 
-Core Logic Requirements:
+4. Start locally on Windows with start_bot.bat.
 
-Detection: The bot must listen to on_message. It should use Regex to detect any URL containing tiktok.com, vm.tiktok.com, or vt.tiktok.com.
+Behavior:
 
-Replacement: When a match is found:
-
-Extract the full URL.
-
-Replace the hostname with tnktok.com.
-
-Reply to the user's message with the new link.
-
-Cleanup: If the bot has the Manage Messages permission, it should suppress the embed of the user's original message (using message.edit(suppress=True)) so the chat isn't cluttered with two links.
-
-Self-Ignore: Ensure the bot ignores its own messages to prevent infinite loops.
-
-Deliverables:
-
-main.py: The actual bot code.
-
-.env: A template for the environment variables (specifically DISCORD_BOT_TOKEN).
-
-requirements.txt: The dependencies.
-
-Instructions: A brief comment explaining that "Message Content Intent" must be enabled in the Discord Developer Portal for this to work.
+- TikTok links are replied to with kktiktok.com embed-fix links.
+- Twitter/X links are replied to with fxtwitter.com or fixupx.com embed-fix links.
+- YouTube, YouTube Music, and youtu.be links are played in the sender's current voice channel using yt-dlp and ffmpeg.
+- The bot ignores bot-authored messages and does not run any AI/Ollama/Gemini responder.
