@@ -13,6 +13,11 @@ TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
 TIKTOK_REGEX = re.compile(r"(https?://(?:www\.|vm\.|vt\.)?tiktok\.com/[^\s]+)", re.IGNORECASE)
 X_REGEX = re.compile(r"(https?://(?:www\.)?(?:twitter\.com|x\.com)/[^\s]+)", re.IGNORECASE)
+TWITCH_CLIP_REGEX = re.compile(
+    r"https?://(?:www\.)?twitch\.tv/[A-Za-z0-9_]+/clip/([A-Za-z0-9_-]+)"
+    r"|https?://clips\.twitch\.tv/([A-Za-z0-9_-]+)",
+    re.IGNORECASE,
+)
 YOUTUBE_REGEX = re.compile(
     r"(https?://(?:www\.|m\.)?(?:youtube\.com|youtu\.be|music\.youtube\.com)/[^\s]+)",
     re.IGNORECASE,
@@ -86,6 +91,11 @@ class TikTokLinkConverter(discord.Client):
             if "twitter.com" in original_url.lower():
                 return re.sub("twitter\\.com", "fxtwitter.com", original_url, flags=re.IGNORECASE)
             return re.sub("x\\.com", "fixupx.com", original_url, flags=re.IGNORECASE)
+
+        twitch_match = TWITCH_CLIP_REGEX.search(content)
+        if twitch_match:
+            slug = twitch_match.group(1) or twitch_match.group(2)
+            return f"https://fxtwitch.seria.moe/clip/{slug}"
 
         return None
 

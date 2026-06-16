@@ -2,6 +2,11 @@ import re
 
 TIKTOK_REGEX = re.compile(r"(https?://(?:www\.|vm\.|vt\.)?tiktok\.com/[^\s]+)", re.IGNORECASE)
 TWITTER_REGEX = re.compile(r"(https?://(?:www\.)?(?:twitter\.com|x\.com)/[^\s]+)", re.IGNORECASE)
+TWITCH_CLIP_REGEX = re.compile(
+    r"https?://(?:www\.)?twitch\.tv/[A-Za-z0-9_]+/clip/([A-Za-z0-9_-]+)"
+    r"|https?://clips\.twitch\.tv/([A-Za-z0-9_-]+)",
+    re.IGNORECASE,
+)
 YOUTUBE_REGEX = re.compile(
     r"(https?://(?:www\.|m\.)?(?:youtube\.com|youtu\.be|music\.youtube\.com)/[^\s]+)",
     re.IGNORECASE,
@@ -19,6 +24,11 @@ def convert_social_link(content):
         if "twitter.com" in original.lower():
             return re.sub("twitter\\.com", "fxtwitter.com", original, flags=re.IGNORECASE)
         return re.sub("x\\.com", "fixupx.com", original, flags=re.IGNORECASE)
+
+    twitch_match = TWITCH_CLIP_REGEX.search(content)
+    if twitch_match:
+        slug = twitch_match.group(1) or twitch_match.group(2)
+        return f"https://fxtwitch.seria.moe/clip/{slug}"
 
     return None
 
@@ -53,6 +63,29 @@ twitter_test_cases = [
 
 print("\nRunning Twitter/X Regex Tests...")
 for content, expected in twitter_test_cases:
+    fixed = convert_social_link(content)
+    if fixed == expected:
+        print(f"[PASS] Fixed: {fixed}")
+    else:
+        raise AssertionError(f"Expected {expected}, got {fixed}")
+
+twitch_test_cases = [
+    (
+        "https://www.twitch.tv/dekel/clip/CrunchySolidLaptopOSfrog-Ql8CoQ4ICFT5pu6s",
+        "https://fxtwitch.seria.moe/clip/CrunchySolidLaptopOSfrog-Ql8CoQ4ICFT5pu6s",
+    ),
+    (
+        "https://twitch.tv/dekel/clip/CrunchySolidLaptopOSfrog-Ql8CoQ4ICFT5pu6s",
+        "https://fxtwitch.seria.moe/clip/CrunchySolidLaptopOSfrog-Ql8CoQ4ICFT5pu6s",
+    ),
+    (
+        "https://clips.twitch.tv/CrunchySolidLaptopOSfrog-Ql8CoQ4ICFT5pu6s",
+        "https://fxtwitch.seria.moe/clip/CrunchySolidLaptopOSfrog-Ql8CoQ4ICFT5pu6s",
+    ),
+]
+
+print("\nRunning Twitch Clip Regex Tests...")
+for content, expected in twitch_test_cases:
     fixed = convert_social_link(content)
     if fixed == expected:
         print(f"[PASS] Fixed: {fixed}")
