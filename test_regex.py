@@ -4,6 +4,7 @@ TIKTOK_REGEX = re.compile(r"(https?://(?:www\.|vm\.|vt\.)?tiktok\.com/[^\s]+)", 
 TWITTER_REGEX = re.compile(r"(https?://(?:www\.)?(?:twitter\.com|x\.com)/[^\s]+)", re.IGNORECASE)
 TWITCH_CLIP_REGEX = re.compile(
     r"https?://(?:www\.)?twitch\.tv/[A-Za-z0-9_]+/clip/([A-Za-z0-9_-]+)"
+    r"|https?://clips\.twitch\.tv/([A-Za-z0-9_]+)/clip/([A-Za-z0-9_-]+)"
     r"|https?://clips\.twitch\.tv/([A-Za-z0-9_-]+)",
     re.IGNORECASE,
 )
@@ -27,7 +28,10 @@ def convert_social_link(content):
 
     twitch_match = TWITCH_CLIP_REGEX.search(content)
     if twitch_match:
-        slug = twitch_match.group(1) or twitch_match.group(2)
+        author = twitch_match.group(2)
+        slug = twitch_match.group(1) or twitch_match.group(3) or twitch_match.group(4)
+        if author:
+            return f"https://fxtwitch.seria.moe/{author}/clip/{slug}"
         return f"https://fxtwitch.seria.moe/clip/{slug}"
 
     return None
@@ -81,6 +85,10 @@ twitch_test_cases = [
     (
         "https://clips.twitch.tv/CrunchySolidLaptopOSfrog-Ql8CoQ4ICFT5pu6s",
         "https://fxtwitch.seria.moe/clip/CrunchySolidLaptopOSfrog-Ql8CoQ4ICFT5pu6s",
+    ),
+    (
+        "https://clips.twitch.tv/dekel/clip/CrunchySolidLaptopOSfrog-Ql8CoQ4ICFT5pu6s",
+        "https://fxtwitch.seria.moe/dekel/clip/CrunchySolidLaptopOSfrog-Ql8CoQ4ICFT5pu6s",
     ),
 ]
 
