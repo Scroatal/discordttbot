@@ -75,6 +75,21 @@ class TikTokLinkConverter(discord.Client):
         if fixed_url is not None:
             await self.reply_with_fixed_link(message, fixed_url)
 
+    async def on_voice_state_update(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ) -> None:
+        if member.bot or member.guild.voice_client is None:
+            return
+
+        voice_client = member.guild.voice_client
+        if before.channel != voice_client.channel and after.channel != voice_client.channel:
+            return
+
+        await self.disconnect_if_alone(member.guild)
+
     async def handle_music_command(self, message: discord.Message) -> bool:
         content = message.content.strip()
         if not content.startswith(COMMAND_PREFIX):
@@ -171,6 +186,11 @@ class TikTokLinkConverter(discord.Client):
         elif voice_client.channel != voice_state.channel:
             await voice_client.move_to(voice_state.channel)
 
+        if not self.voice_has_listeners(voice_client):
+            await voice_client.disconnect()
+            await message.reply("I left because nobody is in the voice channel.", mention_author=False)
+            return
+
         await message.channel.send("Loading YouTube audio...")
 
         try:
@@ -244,6 +264,27 @@ class TikTokLinkConverter(discord.Client):
             lines.append("The music queue is empty.")
 
         await message.reply("\n".join(lines), mention_author=False)
+
+    def voice_has_listeners(self, voice_client: discord.VoiceClient) -> bool:
+        channel = voice_client.channel
+        return any(not member.bot for member in channel.members)
+
+    async def disconnect_if_alone(self, guild: discord.Guild) -> None:
+        voice_client = guild.voice_client
+        if voice_client is None or not voice_client.is_connected():
+            return
+
+        if self.voice_has_listeners(voice_client):
+            return
+
+        state = self.music_state(guild.id)
+        state.queue.clear()
+        state.current = None
+
+        if voice_client.is_playing() or voice_client.is_paused():
+            voice_client.stop()
+
+        await voice_client.disconnect()
 
     async def extract_audio(self, url: str) -> tuple[str, str, str]:
         loop = asyncio.get_running_loop()

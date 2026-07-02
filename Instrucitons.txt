@@ -19,4 +19,5 @@ Behavior:
 - Plain YouTube links are left alone so people can share videos normally.
 - Music playback starts from commands: !play <youtube link>, !skip, !stop, !queue.
 - Music tracks longer than 2 hours are rejected.
+- Music stops and the bot leaves voice when no non-bot users remain in the voice channel.
 - The bot ignores bot-authored messages and does not run any AI/Ollama/Gemini responder.
