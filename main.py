@@ -188,6 +188,7 @@ class TikTokLinkConverter(discord.Client):
 
             if not state.queue:
                 state.current = None
+                await voice_client.disconnect()
                 return
 
             state.current = state.queue.pop(0)
