@@ -23,6 +23,7 @@ YOUTUBE_REGEX = re.compile(
     r"(https?://(?:www\.|m\.)?(?:youtube\.com|youtu\.be|music\.youtube\.com)/[^\s]+)",
     re.IGNORECASE,
 )
+COMMAND_PREFIX = "!"
 
 YDL_OPTIONS = {
     "format": "bestaudio/best",
@@ -35,6 +36,7 @@ YDL_OPTIONS = {
 
 FFMPEG_BEFORE_OPTIONS = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
 FFMPEG_OPTIONS = "-vn"
+MAX_TRACK_DURATION_SECONDS = 2 * 60 * 60
 
 
 @dataclass
@@ -66,13 +68,51 @@ class TikTokLinkConverter(discord.Client):
         if message.author.bot:
             return
 
+        if await self.handle_music_command(message):
+            return
+
         fixed_url = self.convert_social_link(message.content)
         if fixed_url is not None:
             await self.reply_with_fixed_link(message, fixed_url)
 
-        youtube_match = YOUTUBE_REGEX.search(message.content)
-        if youtube_match:
+    async def handle_music_command(self, message: discord.Message) -> bool:
+        content = message.content.strip()
+        if not content.startswith(COMMAND_PREFIX):
+            return False
+
+        command, _, rest = content[1:].partition(" ")
+        command = command.lower()
+        rest = rest.strip()
+
+        if command in {"play", "p"}:
+            youtube_match = YOUTUBE_REGEX.search(rest)
+            if not youtube_match:
+                await message.reply("Use `!play <youtube link>`.", mention_author=False)
+                return True
+
             await self.enqueue_youtube_link(message, youtube_match.group(0))
+            return True
+
+        if command in {"stop", "leave", "disconnect"}:
+            await self.stop_music(message)
+            return True
+
+        if command == "skip":
+            await self.skip_track(message)
+            return True
+
+        if command in {"queue", "q"}:
+            await self.show_queue(message)
+            return True
+
+        if command in {"musichelp", "commands"}:
+            await message.reply(
+                "Music commands: `!play <youtube link>`, `!skip`, `!stop`, `!queue`.",
+                mention_author=False,
+            )
+            return True
+
+        return False
 
     def music_state(self, guild_id: int) -> GuildMusicState:
         state = self.music_states.get(guild_id)
@@ -155,6 +195,56 @@ class TikTokLinkConverter(discord.Client):
 
         await self.play_next(message.guild)
 
+    async def stop_music(self, message: discord.Message) -> None:
+        if message.guild is None:
+            return
+
+        state = self.music_state(message.guild.id)
+        state.queue.clear()
+        state.current = None
+
+        voice_client = message.guild.voice_client
+        if voice_client is None:
+            await message.reply("I am not in a voice channel.", mention_author=False)
+            return
+
+        await voice_client.disconnect()
+        await message.reply("Stopped playback and left the voice channel.", mention_author=False)
+
+    async def skip_track(self, message: discord.Message) -> None:
+        if message.guild is None:
+            return
+
+        voice_client = message.guild.voice_client
+        if voice_client is None or not voice_client.is_connected():
+            await message.reply("I am not playing anything.", mention_author=False)
+            return
+
+        if voice_client.is_playing() or voice_client.is_paused():
+            voice_client.stop()
+            await message.reply("Skipped.", mention_author=False)
+            return
+
+        await message.reply("I am not playing anything.", mention_author=False)
+
+    async def show_queue(self, message: discord.Message) -> None:
+        if message.guild is None:
+            return
+
+        state = self.music_state(message.guild.id)
+        lines = []
+        if state.current is not None:
+            lines.append(f"Now playing: **{state.current.title}**")
+
+        if state.queue:
+            queued = "\n".join(f"{index}. {track.title}" for index, track in enumerate(state.queue, start=1))
+            lines.append(f"Queued:\n{queued}")
+
+        if not lines:
+            lines.append("The music queue is empty.")
+
+        await message.reply("\n".join(lines), mention_author=False)
+
     async def extract_audio(self, url: str) -> tuple[str, str, str]:
         loop = asyncio.get_running_loop()
 
@@ -170,10 +260,27 @@ class TikTokLinkConverter(discord.Client):
                 raise RuntimeError("yt-dlp did not return an audio stream URL")
 
             title = info.get("title") or "YouTube audio"
+            duration = info.get("duration")
+            if duration is not None and duration > MAX_TRACK_DURATION_SECONDS:
+                raise RuntimeError(
+                    f"{title} is longer than the 2 hour music limit "
+                    f"({self.format_duration(duration)})."
+                )
+
             page_url = info.get("webpage_url") or url
             return title, stream_url, page_url
 
         return await loop.run_in_executor(None, extract)
+
+    def format_duration(self, seconds: int | float) -> str:
+        seconds = int(seconds)
+        hours, remainder = divmod(seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        if hours:
+            return f"{hours}h {minutes}m"
+        if minutes:
+            return f"{minutes}m {seconds}s"
+        return f"{seconds}s"
 
     async def play_next(self, guild: discord.Guild) -> None:
         state = self.music_state(guild.id)

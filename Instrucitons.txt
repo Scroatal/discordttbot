@@ -16,5 +16,7 @@ Behavior:
 
 - TikTok links are replied to with kktiktok.com embed-fix links.
 - Twitter/X links are replied to with fxtwitter.com or fixupx.com embed-fix links.
-- YouTube, YouTube Music, and youtu.be links are played in the sender's current voice channel using yt-dlp and ffmpeg.
+- Plain YouTube links are left alone so people can share videos normally.
+- Music playback starts from commands: !play <youtube link>, !skip, !stop, !queue.
+- Music tracks longer than 2 hours are rejected.
 - The bot ignores bot-authored messages and does not run any AI/Ollama/Gemini responder.
